@@ -31,53 +31,56 @@ def average(values):
   x=[]
   return sum(values, 0.0) /len(values)
 
-try : 
+while True: 
+  try : 
     conn=pymysql.connect(host="220.149.235.54", user="dku18", passwd="1234", db="yedam")
-  with conn.cursor() as cur : 
-    sql="insert into gain(date_pre, date_suf, date, CO, Temperature, Humidity, Place) values(%s, %s, %s, %s, %s, %s, %s)"
-    while True:
-      x=[] #CO
-      y=[] #tem 
-      z=[] #hu
+    with conn.cursor() as cur : 
+      sql="insert into gain(date_pre, date_suf, date, CO, Temperature, Humidity, Place) values(%s, %s, %s, %s, %s, %s, %s)"
+      
+      while True:
+        x=[] #CO
+        y=[] #tem 
+        z=[] #hu
 
-      time1=int(time.strftime('%M', time.localtime()))
+        time1=int(time.strftime('%M', time.localtime()))
  
-      while True: 
+        while True: 
 
-        time2=int(time.strftime('%M', time.localtime()))
+          time2=int(time.strftime('%M', time.localtime()))
 
-        if (time2-time1>=10 ) or (time2-time1<=-10):
-          break;
+          if (time2-time1>=10 ) or (time2-time1<=-10):
+            break;
           
-        humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
-        adcvalue=read_spi(adcchannel)
+          humidity, temperature = Adafruit_DHT.read_retry(sensor, pin)
+          adcvalue=read_spi(adcchannel)
         
-        x.append(adcvalue)
-        y.append(temperature)
-        z.append(humidity)
+          x.append(adcvalue)
+          y.append(temperature)
+          z.append(humidity)
  #       print(x)
  
-        time.sleep(10)
+          time.sleep(10)
 
-      temperature=average(y)
-      humidity=average(z)
-      adcvalue=max(x)
+        temperature=average(y)
+        humidity=average(z)
+        adcvalue=max(x)
 
-      if humidity is not None and temperature is not None:
-        print(time.strftime('%Y%m%d', time.localtime()),time.strftime('%H%M%S', time.localtime()), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),adcvalue,temperature, humidity, space)
+        if humidity is not None and temperature is not None:
+          print(time.strftime('%Y%m%d', time.localtime()),time.strftime('%H%M%S', time.localtime()), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),adcvalue,temperature, humidity, space)
+          
           try :  
             cur.execute(sql,(time.strftime('%Y%m%d', time.localtime()),time.strftime('%H%M%S', time.localtime()), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime()),adcvalue,temperature, humidity, space))
             conn.commit()
           except:
             conn.rollback()
             print("DB Error : Cannot Execute Query")
-      else :
-        print("Failed to get reading.")
+        else :
+          print("Failed to get reading.")
         
-except TimeoutException:
-                print("Timeout")
-                continue         
-except KeyboardInterrupt:
-  exit()
-finally:
-  conn.close()
+  except TimeoutError:
+    print("Time out")
+    continue         
+  except KeyboardInterrupt:
+    exit()
+  finally:
+    conn.close()
